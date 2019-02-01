@@ -94,16 +94,4 @@ public class Rail : MonoBehaviour
 
         return Quaternion.Lerp(n1.transform.rotation, n2.transform.rotation, ratio);
     }
-
-    /*
-    public void OnDrawGizmos()
-    {
-        for (int i = 0; i < nodes.Length - 1; i++)
-        {
-            Node n1 = nodes[i];
-            Node n2 = nodes[i + 1];
-            Handles.DrawDottedLine(n1.transform.position, n2.transform.position, 3.0f);
-        }
-    }
-    */
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class CheckersBoard : MonoBehaviour
 {
@@ -16,6 +17,8 @@ public class CheckersBoard : MonoBehaviour
     public CanvasGroup alertCanvas;
     private float lastAlert;
     private bool alertActive;
+    private bool gameIsOver;
+    private float winTime;
 
     private Vector3 boardOffset = new Vector3(-4.0f, 0, -4.0f);
     private Vector3 pieceOffset = new Vector3(0.5f, 0.125f, 0.5f);
@@ -59,6 +62,25 @@ public class CheckersBoard : MonoBehaviour
 
     private void Update()
     {
+        if(gameIsOver)
+        {
+            if(Time.time - winTime > 3.0f)
+            {
+                Server server = FindObjectOfType<Server>();
+                Client client = FindObjectOfType<Client>();
+
+                if(server)
+                    Destroy(server.gameObject);
+
+                if(client)
+                    Destroy(client.gameObject);
+
+                SceneManager.LoadScene("Menu");
+            }
+
+            return;
+        }
+
         foreach(Transform t in highlightsContainer.transform)
         {
             t.Rotate(Vector3.up * 90 * Time.deltaTime);
@@ -266,22 +288,25 @@ public class CheckersBoard : MonoBehaviour
         hasKilled = false;
         CheckVictory();
 
-        if(!client)
+        if(!gameIsOver)
         {
-            isWhite = !isWhite;
-            if(isWhite)
-                Alert("Białe pionki");
+            if(!client)
+            {
+                isWhite = !isWhite;
+                if(isWhite)
+                    Alert("Białe pionki");
+                else
+                    Alert("Czarne pionki");
+            }
             else
-                Alert("Czarne pionki");
+            {
+                if(isWhite)
+                    Alert(client.players[0].name + " ruszaj się");
+                else
+                    Alert(client.players[1].name + " ruszaj się");
+            }
         }
-        else
-        {
-            if(isWhite)
-                Alert(client.players[0].name + " ruszaj się");
-            else
-                Alert(client.players[1].name + " ruszaj się");
-        }
-
+        
         ScanForPossibleMove();
     }
 
@@ -305,10 +330,14 @@ public class CheckersBoard : MonoBehaviour
     
     private void Victory(bool isWhite)
     {
+        winTime = Time.time;
+
         if(isWhite)
-            Debug.Log("Wygrała Drużyna Biała");
+            Alert("Wygrała Drużyna Biała");
         else
-            Debug.Log("Wygrała Drużyna Czarna");
+            Alert("Wygrała Drużyna Czarna");
+
+        gameIsOver = true;
     }
 
     private List<Piece> ScanForPossibleMove(Piece p, int x, int y)
@@ -347,7 +376,7 @@ public class CheckersBoard : MonoBehaviour
             highlightsContainer.transform.GetChild(0).transform.position = forcedPieces[0].transform.position + Vector3.down * 0.1f;
 
         if(forcedPieces.Count > 1)
-            highlightsContainer.transform.GetChild(0).transform.position = forcedPieces[0].transform.position + Vector3.down * 0.1f;
+            highlightsContainer.transform.GetChild(1).transform.position = forcedPieces[1].transform.position + Vector3.down * 0.1f;
     }
 
     private void GenerateBoard()
